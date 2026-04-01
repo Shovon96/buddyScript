@@ -11,3 +11,149 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// User Model
+model User {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  posts        Post[]
+  comments     Comment[]
+  replies      Reply[]
+  postLikes    PostLike[]
+  commentLikes CommentLike[]
+  replyLikes   ReplyLike[]
+
+  @@map("users")
+}
+
+// Post Model
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  imageUrl  String?
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  comments  Comment[]
+  postLikes PostLike[]
+
+  // Indexes for performance
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([isPrivate])
+  @@map("posts")
+}
+
+// Comment Model
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  replies      Reply[]
+  commentLikes CommentLike[]
+
+  // Indexes for performance
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+// Reply Model
+model Reply {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Relations
+  replyLikes ReplyLike[]
+
+  // Indexes for performance
+  @@index([commentId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("replies")
+}
+
+// PostLike Model (for tracking who liked a post)
+model PostLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint to prevent duplicate likes
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("post_likes")
+}
+
+// CommentLike Model (for tracking who liked a comment)
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint to prevent duplicate likes
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@index([userId])
+  @@map("comment_likes")
+}
+
+// ReplyLike Model (for tracking who liked a reply)
+model ReplyLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  replyId String
+  reply   Reply  @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint to prevent duplicate likes
+  @@unique([replyId, userId])
+  @@index([replyId])
+  @@index([userId])
+  @@map("reply_likes")
+}
