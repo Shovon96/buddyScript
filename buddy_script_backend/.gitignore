@@ -5,8 +5,3 @@ coverage
 *.log
 .env
 /src/generated/prisma
-
-
-
-./src/app
-./prisma
